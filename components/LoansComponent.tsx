@@ -859,16 +859,17 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                     right: 10mm;
                     bottom: 10mm;
                     border: 2px solid #C00000; /* Red Outer */
-                    padding: 5px;
+                    padding: 8px;
                     box-sizing: border-box;
                     display: flex;
                     flex-direction: column;
                   }
                   .page-container.page-break { page-break-after: always; }
+                  .page-container.second-page { page-break-before: always; }
                   .inner-border {
                     border: 1px solid #4472C4; /* Blue Inner */
                     height: 100%;
-                    padding: 20px 30px;
+                    padding: 22px 28px;
                     box-sizing: border-box;
                     position: relative;
                     display: flex;
@@ -880,8 +881,8 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%) rotate(-45deg);
-                    font-size: 80pt;
-                    color: rgba(200, 200, 200, 0.08);
+                    font-size: 72pt;
+                    color: rgba(200, 200, 200, 0.05);
                     font-weight: 900;
                     white-space: nowrap;
                     z-index: 0;
@@ -899,8 +900,9 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                   .header {
                     display: flex;
                     justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 25px;
+                    align-items: flex-start;
+                    gap: 12px;
+                    margin-bottom: 22px;
                     border-bottom: 2px solid #0f172a;
                     padding-bottom: 10px;
                   }
@@ -920,17 +922,23 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                   }
                   .doc-title {
                     text-align: right;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                    gap: 2px;
                   }
                   .doc-type {
-                    font-size: 14pt;
+                    font-size: 13pt;
                     font-weight: 700;
                     color: #0f172a;
                     text-transform: uppercase;
+                    line-height: 1.2;
                   }
                   .doc-id {
                     font-family: monospace;
                     color: #94a3b8;
                     font-size: 9pt;
+                    line-height: 1.2;
                   }
 
                   /* Stat Cards */
@@ -1173,7 +1181,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                     </div>
                   </div>
                         <!-- Second Page (months 13-24) -->
-                        <div class="page-container">
+                        <div class="page-container second-page">
                         <div class="inner-border">
                           <div class="watermark">MILLIONAIRES CLUB</div>
                           <div class="content">
