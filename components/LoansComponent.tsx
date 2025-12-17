@@ -824,6 +824,10 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
       const handlePrint = () => {
           const win = window.open('', '', 'width=210mm,height=297mm');
           if (!win) return;
+
+          // Split schedule into two pages (12 months per page)
+          const firstHalf = schedule.slice(0, 12);
+          const secondHalf = schedule.slice(12);
           
           win.document.write(`
             <!DOCTYPE html>
@@ -860,6 +864,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                     display: flex;
                     flex-direction: column;
                   }
+                  .page-container.page-break { page-break-after: always; }
                   .inner-border {
                     border: 1px solid #4472C4; /* Blue Inner */
                     height: 100%;
@@ -1047,7 +1052,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                 </style>
               </head>
               <body>
-                  <div class="page-container">
+                    <div class="page-container page-break">
                     <div class="inner-border">
                         <div class="watermark">MILLIONAIRES CLUB</div>
                         
@@ -1129,7 +1134,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        ${schedule.map((row, idx) => {
+                                  ${firstHalf.map((row) => {
                                             let statusClass = 'status-pending';
                                             let statusText = 'Pending';
                                             if (row.actual) {
@@ -1167,9 +1172,77 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                         </div>
                     </div>
                   </div>
-                  <div class="no-print" style="position:fixed; top:20px; right:20px; display:block;">
-                      <button onclick="window.print()" style="padding:10px 20px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">PRINT</button>
-                  </div>
+                        <!-- Second Page (months 13-24) -->
+                        <div class="page-container">
+                        <div class="inner-border">
+                          <div class="watermark">MILLIONAIRES CLUB</div>
+                          <div class="content">
+                            <div class="header">
+                              <div>
+                                <h1 class="brand-main">Millionaires Club</h1>
+                                <div class="brand-sub">Financial Services</div>
+                              </div>
+                              <div class="doc-title">
+                                <div class="doc-type">Repayment Schedule (cont.)</div>
+                                <div class="doc-id">LOAN #${scheduleLoan.id}</div>
+                              </div>
+                            </div>
+
+                            <div style="flex:1; overflow:hidden;">
+                              <table class="schedule-table">
+                                <thead>
+                                  <tr>
+                                    <th style="width: 30px;">#</th>
+                                    <th>Due Date</th>
+                                    <th style="text-align:right;">Est. Payment</th>
+                                    <th style="text-align:right;">Actual Paid</th>
+                                    <th style="text-align:right;">Paid Date</th>
+                                    <th style="text-align:center;">Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  ${secondHalf.map((row) => {
+                                    let statusClass = 'status-pending';
+                                    let statusText = 'Pending';
+                                    if (row.actual) {
+                                      statusClass = 'status-paid';
+                                      statusText = 'PAID';
+                                    } else if (new Date() > row.dueDate) {
+                                      statusClass = 'status-due';
+                                      statusText = 'OVERDUE';
+                                    }
+
+                                    return `
+                                    <tr>
+                                      <td class="num-col">${row.number}</td>
+                                      <td>${row.dueDate.toLocaleDateString()}</td>
+                                      <td class="amount-col" style="text-align:right;">$${row.estimated.toFixed(2)}</td>
+                                      <td class="amount-col" style="text-align:right; color:${row.actual ? '#059669' : '#94a3b8'};">
+                                        ${row.actual ? '$' + row.actual.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}
+                                      </td>
+                                      <td style="text-align:right; font-size:8pt; color:#64748b;">
+                                        ${row.actualDate ? row.actualDate.toLocaleDateString() : ''}
+                                      </td>
+                                      <td style="text-align:center;">
+                                        <span class="status-pill ${statusClass}">${statusText}</span>
+                                      </td>
+                                    </tr>
+                                  `}).join('')}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            <div class="footer">
+                              &copy; 2025 Millionaires Club Board of Directors • Official Document<br>
+                              Generated on ${new Date().toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                        </div>
+
+                        <div class="no-print" style="position:fixed; top:20px; right:20px; display:block;">
+                          <button onclick="window.print()" style="padding:10px 20px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">PRINT</button>
+                        </div>
               </body>
             </html>
           `);
