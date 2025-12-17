@@ -734,6 +734,28 @@ export default function App() {
         notify("⚠️ Failed to sync with Google Sheets. Using local data.", "error");
       }
     };
+
+    // Check for app updates (cache busting)
+    const checkUpdates = async () => {
+      try {
+        const response = await fetch('/Millionaires-Club/version.txt', { cache: 'no-store' });
+        const newVersion = await response.text();
+        const oldVersion = localStorage.getItem('app_version');
+        if (oldVersion && oldVersion !== newVersion) {
+          console.log('App update detected. Clearing cache...');
+          localStorage.clear();
+          localStorage.setItem('app_version', newVersion);
+          // Suggest refresh to user
+          notify("✓ New version available! Please refresh the page.", "info");
+        } else if (!oldVersion) {
+          localStorage.setItem('app_version', newVersion);
+        }
+      } catch (err) {
+        console.log('Update check skipped');
+      }
+    };
+
+    checkUpdates();
     syncData();
   }, []);
 

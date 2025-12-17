@@ -1,0 +1,17 @@
+# Cache busting for GitHub Pages
+# HTML and JSON files should not be cached
+<FilesMatch "\.(html|json)$">
+  Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</FilesMatch>
+
+# JavaScript and CSS with hash in filename can be cached long-term
+<FilesMatch "\.(js|css)$">
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+
+# Images can be cached for a long time
+<FilesMatch "\.(png|jpg|jpeg|gif|svg|ico)$">
+  Header set Cache-Control "public, max-age=2592000"
+</FilesMatch>
