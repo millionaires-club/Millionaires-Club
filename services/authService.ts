@@ -116,24 +116,27 @@ export const authService = {
 
   // Authenticate member with email and password
   authenticate: (
-    email: string, 
-    password: string, 
+    email: string,
+    password: string,
     members: Member[],
     adminEmails: string[] = []
   ): AuthToken | null => {
-    const member = members.find(m => 
-      m.email.toLowerCase() === email.toLowerCase() && 
-      m.password === password
-    );
-    
+    // First, locate the member by email regardless of password. Google Sheets
+    // rows may omit the password field; we default to 'welcome123' in that case.
+    const member = members.find(m => m.email?.toLowerCase() === email.toLowerCase());
+
     if (!member) return null;
-    
-    // Determine role
+
+    // If the member has no password set (e.g., synced from Sheets), accept the default.
+    const expectedPassword = member.password || 'welcome123';
+    if ((password || '').trim() !== expectedPassword) return null;
+
+    // Determine role (admins are matched by email list)
     let role: 'admin' | 'treasurer' | 'member' = 'member';
-    if (adminEmails.includes(email.toLowerCase())) {
+    if (adminEmails.map(e => e.toLowerCase()).includes(email.toLowerCase())) {
       role = 'admin';
     }
-    
+
     return authService.createToken(member, role);
   }
 };
