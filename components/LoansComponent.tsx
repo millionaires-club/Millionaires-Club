@@ -269,14 +269,18 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
 
     setLoans([newLoan, ...loans]);
     const updatedMember = members.find(m => m.id === borrowerId);
-    setMembers(members.map(m => m.id === borrowerId ? { ...m, activeLoanId: newLoan.id } : m));
+    const memberWithLoan = updatedMember ? { ...updatedMember, activeLoanId: newLoan.id } : null;
+    
+    if (memberWithLoan) {
+      setMembers(members.map(m => m.id === borrowerId ? memberWithLoan : m));
+    }
     
     // Sync to Google Sheets
     if (isSheetsConfigured()) {
         sheetService.createLoan(newLoan).catch(err => console.error('Sheet sync error:', err));
         // Sync updated member with activeLoanId
-        if (updatedMember) {
-            sheetService.updateMember({ ...updatedMember, activeLoanId: newLoan.id }).catch(err => console.error('Sheet sync error:', err));
+        if (memberWithLoan) {
+            sheetService.updateMember(memberWithLoan).catch(err => console.error('Sheet sync error:', err));
         }
     }
     
