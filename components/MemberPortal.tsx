@@ -4,7 +4,7 @@ import { Member, Loan, Transaction, YearlyContribution, LoanApplication } from '
 import { 
   Users, LogOut, Wallet, Activity, CheckCircle, Clock, 
   TrendingUp, FileText, Settings, CreditCard, Upload, 
-  User, Shield, Bell, ChevronRight, Download, Save, X, Edit2, AlertCircle, Menu, LayoutDashboard, ArrowRightLeft, Plus, Hourglass, XCircle, ExternalLink, Copy, Landmark, Lock, Loader, Check, Award, Calendar, Printer, PenTool, Heart
+  User, Shield, Bell, ChevronRight, Download, Save, X, Edit2, AlertCircle, Menu, LayoutDashboard, ArrowRightLeft, Plus, Hourglass, XCircle, ExternalLink, Copy, Landmark, Lock, Loader, Check, Award, Calendar, Printer, PenTool, Heart, Send, History
 } from 'lucide-react';
 import { sheetService, isSheetsConfigured } from '../services/sheetService';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -196,6 +196,10 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
     const updated = { ...member, autoPay: !member.autoPay };
     setMember(updated);
     onUpdateProfile(updated);
+  };
+
+  const handlePrintDocument = (loan: Loan) => {
+    setAgreementLoan(loan);
   };
 
   const copyToClipboard = (text: string) => {
@@ -874,7 +878,172 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
                      <div className="mt-6 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 flex justify-between items-center"><div><h3 className="font-bold text-slate-800 dark:text-white">Security Settings</h3><p className="text-sm text-slate-500 dark:text-slate-400">Update password and 2FA settings.</p></div><button className="px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">Manage</button></div>
                  </div>
              )}
-             {/* Payments and Documents content... */}
+             {activeTab === 'payments' && (
+                 <div className="max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                     {activeLoan ? (
+                         <>
+                             {/* Payment Methods */}
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                 {/* Zelle Payment */}
+                                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl shadow-sm border border-purple-200 dark:border-purple-700 p-6 hover:shadow-md transition-all">
+                                     <div className="flex items-start justify-between mb-4">
+                                         <div>
+                                             <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-1">Zelle Transfer</h3>
+                                             <p className="text-sm text-slate-500 dark:text-slate-400">Direct bank transfer</p>
+                                         </div>
+                                         <div className="p-3 bg-purple-100 dark:bg-purple-900/40 rounded-xl">
+                                             <CreditCard size={20} className="text-purple-600 dark:text-purple-400" />
+                                         </div>
+                                     </div>
+                                     <div className="mb-4 p-3 bg-white dark:bg-slate-800/50 rounded-xl">
+                                         <div className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold mb-2">Amount Due</div>
+                                         <div className="text-2xl font-bold text-slate-800 dark:text-white">{formatCurrency(activeLoan.remainingBalance)}</div>
+                                     </div>
+                                     <button onClick={() => setShowZelleModal(true)} className="w-full py-2 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 dark:shadow-none flex items-center justify-center gap-2">
+                                         <Send size={16} /> Pay with Zelle
+                                     </button>
+                                 </div>
+
+                                 {/* Stripe ACH Payment */}
+                                 <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-2xl shadow-sm border border-blue-200 dark:border-blue-700 p-6 hover:shadow-md transition-all">
+                                     <div className="flex items-start justify-between mb-4">
+                                         <div>
+                                             <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-1">ACH Transfer</h3>
+                                             <p className="text-sm text-slate-500 dark:text-slate-400">Stripe ACH or Direct Bank Link</p>
+                                         </div>
+                                         <div className="p-3 bg-blue-100 dark:bg-blue-900/40 rounded-xl">
+                                             <Landmark size={20} className="text-blue-600 dark:text-blue-400" />
+                                         </div>
+                                     </div>
+                                     {linkedBankAccount ? (
+                                         <div className="mb-4 p-3 bg-white dark:bg-slate-800/50 rounded-xl">
+                                             <div className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold mb-2">Linked Account</div>
+                                             <div className="text-base font-bold text-slate-800 dark:text-white">{linkedBankAccount.bankName}</div>
+                                             <div className="text-sm text-slate-500 dark:text-slate-400">Ending in {linkedBankAccount.last4}</div>
+                                         </div>
+                                     ) : (
+                                         <div className="mb-4 p-3 bg-white dark:bg-slate-800/50 rounded-xl">
+                                             <div className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold mb-2">Status</div>
+                                             <div className="text-sm text-slate-600 dark:text-slate-400">No bank account linked</div>
+                                         </div>
+                                     )}
+                                     <button onClick={() => setShowACHModal(true)} className="w-full py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center gap-2">
+                                         <Lock size={16} /> {linkedBankAccount ? 'Change Account' : 'Link Bank Account'}
+                                     </button>
+                                 </div>
+                             </div>
+
+                             {/* Payment Instructions */}
+                             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 mb-6">
+                                 <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4">Payment Instructions</h3>
+                                 <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
+                                     <div className="flex gap-4">
+                                         <div className="shrink-0 w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold">1</div>
+                                         <div>
+                                             <p className="font-bold text-slate-800 dark:text-white mb-1">Choose Payment Method</p>
+                                             <p>Select Zelle for quick bank transfer or link your bank account for ACH payments.</p>
+                                         </div>
+                                     </div>
+                                     <div className="flex gap-4">
+                                         <div className="shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">2</div>
+                                         <div>
+                                             <p className="font-bold text-slate-800 dark:text-white mb-1">Enter Your Payment</p>
+                                             <p>Click the payment button above and follow the secure payment instructions.</p>
+                                         </div>
+                                     </div>
+                                     <div className="flex gap-4">
+                                         <div className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold">3</div>
+                                         <div>
+                                             <p className="font-bold text-slate-800 dark:text-white mb-1">Confirmation</p>
+                                             <p>You'll receive a confirmation email with your transaction receipt.</p>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+
+                             {/* Recent Payments */}
+                             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                                 <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                     <History size={20} className="text-slate-600 dark:text-slate-400"/> Recent Payments
+                                 </h3>
+                                 <div className="overflow-hidden">
+                                     <table className="w-full text-sm text-left">
+                                         <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-700">
+                                             <tr>
+                                                 <th className="px-4 py-3">Date</th>
+                                                 <th className="px-4 py-3">Method</th>
+                                                 <th className="px-4 py-3 text-right">Amount</th>
+                                                 <th className="px-4 py-3 text-right">Status</th>
+                                             </tr>
+                                         </thead>
+                                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                             {memberTransactions
+                                                 .filter(t => t.type === 'LOAN_REPAYMENT')
+                                                 .slice(0, 10)
+                                                 .map(t => (
+                                                     <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                                                         <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{formatDate(t.date)}</td>
+                                                         <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{t.paymentMethod || 'Bank Transfer'}</td>
+                                                         <td className="px-4 py-3 text-right font-bold text-slate-800 dark:text-white">{formatCurrency(t.amount)}</td>
+                                                         <td className="px-4 py-3 text-right"><span className={`text-xs font-bold px-2 py-1 rounded border ${t.status === 'completed' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800'}`}>{t.status}</span></td>
+                                                     </tr>
+                                                 ))}
+                                         </tbody>
+                                     </table>
+                                     {memberTransactions.filter(t => t.type === 'LOAN_REPAYMENT').length === 0 && (
+                                         <div className="px-4 py-8 text-center text-slate-400 italic">No payments recorded yet.</div>
+                                     )}
+                                 </div>
+                             </div>
+                         </>
+                     ) : (
+                         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+                             <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                 <Wallet size={24} className="text-slate-400 dark:text-slate-500" />
+                             </div>
+                             <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-2">No Active Loans</h3>
+                             <p className="text-slate-500 dark:text-slate-400 mb-6">You don't have any active loans to make payments on.</p>
+                             <button onClick={() => setActiveTab('loans')} className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">Apply for a Loan</button>
+                         </div>
+                     )}
+                 </div>
+             )}
+             {activeTab === 'documents' && (
+                 <div className="max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                         <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                             <FileText size={20} className="text-slate-600 dark:text-slate-400"/> Loan Documents
+                         </h2>
+                         <div className="space-y-3">
+                             {myLoans.length > 0 ? (
+                                 myLoans.map(loan => (
+                                     <div key={loan.id} className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700 flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-700/70 transition-colors">
+                                         <div>
+                                             <p className="font-bold text-slate-800 dark:text-white">Loan {loan.id}</p>
+                                             <p className="text-sm text-slate-500 dark:text-slate-400">Issued {formatDate(loan.startDate)} • {loan.status}</p>
+                                         </div>
+                                         <div className="flex gap-2">
+                                             <button onClick={() => setAgreementLoan(loan)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded text-slate-600 dark:text-slate-300 transition-colors" title="View Agreement">
+                                                 <FileText size={18} />
+                                             </button>
+                                             <button onClick={() => setScheduleLoan(loan)} className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400 transition-colors" title="View Schedule">
+                                                 <Calendar size={18} />
+                                             </button>
+                                             <button onClick={() => handlePrintDocument(loan)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded text-slate-600 dark:text-slate-300 transition-colors" title="Print Document">
+                                                 <Printer size={18} />
+                                             </button>
+                                         </div>
+                                     </div>
+                                 ))
+                             ) : (
+                                 <div className="py-12 text-center text-slate-400">
+                                     <p>No loan documents available yet.</p>
+                                 </div>
+                             )}
+                         </div>
+                     </div>
+                 </div>
+             )}
          </div>
       </main>
 

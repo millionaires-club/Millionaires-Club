@@ -212,7 +212,27 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
     const now = new Date();
     const nextDue = new Date(now.getFullYear(), now.getMonth() + 1, 10);
     
-    const loanId = Math.random().toString(36).substr(2, 9);
+    // Generate sequential loan ID: L001-25, L002-25, etc.
+    const currentYear = now.getFullYear();
+    const yearSuffix = currentYear.toString().slice(-2);
+    
+    // Find the highest sequence number for current year
+    const currentYearLoans = loans.filter(loan => {
+      const loanYear = loan.id.split('-')[1];
+      return loanYear === yearSuffix;
+    });
+    
+    const maxSequence = currentYearLoans.reduce((max, loan) => {
+      const match = loan.id.match(/^L(\d+)-/);
+      if (match) {
+        const seq = parseInt(match[1], 10);
+        return seq > max ? seq : max;
+      }
+      return max;
+    }, 0);
+    
+    const nextSequence = (maxSequence + 1).toString().padStart(3, '0');
+    const loanId = `L${nextSequence}-${yearSuffix}`;
 
     // Generate payment schedule if interest rate is set
     const paymentSchedule = interestRate > 0 
