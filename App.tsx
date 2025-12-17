@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Users, LayoutDashboard, ShieldCheck, UserCheck, ArrowRight, Shield, Lock, AlertCircle,
-  Menu, Calculator, X, Edit2, Save, Sparkles, Heart, Trash2, Database, History
+  Menu, Calculator, X, Edit2, Save, Sparkles, Heart, Trash2, Database, History, Upload
 } from 'lucide-react';
 import { Member, Loan, Transaction, CommunicationLog, YearlyContribution, LoanApplication, AuditLog } from './types';
 import { CONTRIBUTIONS_DB, INITIAL_MEMBERS, CONTRIBUTION_HISTORY_DB } from './constants';
@@ -78,7 +78,7 @@ const LandingPage = ({ setViewMode }: { setViewMode: (mode: any) => void }) => (
   </div>
 );
 
-const AdminLoginPage = ({ onLogin, setViewMode, loginError }: { onLogin: (e: React.FormEvent) => void, setViewMode: (mode: any) => void, loginError: string }) => (
+const AdminLoginPage = ({ onLogin, setViewMode, loginError, onShowReset, onShowVerify }: { onLogin: (e: React.FormEvent) => void, setViewMode: (mode: any) => void, loginError: string, onShowReset: () => void, onShowVerify: () => void }) => (
   <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden p-8 animate-in fade-in zoom-in-95 border border-slate-200 dark:border-slate-700">
           <div className="text-center mb-8">
@@ -109,6 +109,11 @@ const AdminLoginPage = ({ onLogin, setViewMode, loginError }: { onLogin: (e: Rea
               </div>
               <button type="submit" className="w-full bg-slate-800 dark:bg-white text-white dark:text-slate-900 py-3.5 rounded-lg font-bold hover:bg-slate-700 dark:hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 mt-2">Enter Workspace <ArrowRight size={16} /></button>
           </form>
+          <div className="mt-4 text-center text-xs flex justify-center gap-4">
+            <button onClick={onShowReset} className="text-blue-600 dark:text-blue-400 hover:underline">Forgot password?</button>
+            <span className="text-slate-400">•</span>
+            <button onClick={onShowVerify} className="text-emerald-600 dark:text-emerald-400 hover:underline">Verify email</button>
+          </div>
           <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 text-center"><button onClick={() => setViewMode('landing')} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline">Back to Home</button></div>
       </div>
   </div>
@@ -173,7 +178,7 @@ const SystemTabComponent = ({ syncStatus, lastSyncTime, syncError, members, curr
             System Health
           </div>
         </button>
-        {currentUser && authService.hasRole(currentUser, 'admin') && (
+        {currentUser && authService.hasRole('admin') && (
           <button
             onClick={() => setSystemTab('audit')}
             className={`px-4 py-2 font-medium transition-colors ${
@@ -258,7 +263,7 @@ const SystemTabComponent = ({ syncStatus, lastSyncTime, syncError, members, curr
       )}
 
       {/* Audit Tab */}
-      {systemTab === 'audit' && currentUser && authService.hasRole(currentUser, 'admin') && (
+      {systemTab === 'audit' && currentUser && authService.hasRole('admin') && (
         <AuditLogViewer members={members} />
       )}
     </div>
@@ -631,6 +636,8 @@ export default function App() {
   const [currentMemberUser, setCurrentMemberUser] = useState<Member | null>(null);
   const [showBatchUpload, setShowBatchUpload] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Authentication state
@@ -969,18 +976,15 @@ export default function App() {
       }));
       
       // Log audit trail
-      if (currentUser && changes.length > 0) {
-          auditService.log({
-              userId: currentUser.id,
-              userName: currentUser.name,
-              userRole: currentUser.role,
-              action: 'UPDATE_MEMBER',
-              entityType: 'Member',
-              entityId: editingMember.id,
-              changes,
-              description: `Updated member profile for ${editingMember.name}`
-          });
-      }
+        if (currentUser && changes.length > 0) {
+          auditService.log(
+          'UPDATE_MEMBER',
+          'member',
+          editingMember.id,
+          `Updated member profile for ${editingMember.name}`,
+          changes
+          );
+        }
       
       if (isSheetsConfigured()) {
           await sheetService.updateMember(updatedMember);
@@ -1077,7 +1081,7 @@ export default function App() {
 
   // --- RENDER LOGIC ---
   if (viewMode === 'landing') return <LandingPage setViewMode={setViewMode} />;
-  if (viewMode === 'admin_login') return <AdminLoginPage onLogin={handleAdminLogin} setViewMode={setViewMode} loginError={loginError} />;
+  if (viewMode === 'admin_login') return <AdminLoginPage onLogin={handleAdminLogin} setViewMode={setViewMode} loginError={loginError} onShowReset={() => setShowResetModal(true)} onShowVerify={() => setShowVerifyModal(true)} />;
   if (viewMode === 'member_login') return <MemberLoginScreen onLogin={handleMemberLogin} loginError={loginError} setViewMode={setViewMode} />;
   
   if (viewMode === 'member_portal' && currentMemberUser) {
@@ -1180,6 +1184,151 @@ export default function App() {
           />
           <BatchUploadModal showBatchUpload={showBatchUpload} setShowBatchUpload={setShowBatchUpload} members={members} setMembers={setMembers} notify={notify} />
           <LoanCalculatorModal showCalculator={showCalculator} setShowCalculator={setShowCalculator} />
+          <PasswordResetModal 
+            show={showResetModal} 
+            onClose={() => setShowResetModal(false)} 
+            members={members} 
+            setMembers={setMembers} 
+            notify={notify} 
+          />
+          <EmailVerificationModal 
+            show={showVerifyModal} 
+            onClose={() => setShowVerifyModal(false)} 
+            notify={notify} 
+          />
       </div>
   );
 }
+
+// --- Password Reset Modal ---
+const PasswordResetModal = ({ show, onClose, members, setMembers, notify }: { show: boolean, onClose: () => void, members: Member[], setMembers: (fn: any) => void, notify: (msg: string, type?: 'success'|'error'|'info') => void }) => {
+  const [step, setStep] = useState<'request' | 'verify'>('request');
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [issuedCode, setIssuedCode] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  if (!show) return null;
+
+  const handleRequest = () => {
+    if (!email) { notify('Please enter email', 'error'); return; }
+    const code = authService.requestPasswordReset(email, members);
+    if (!code) { notify('Email not found in members', 'error'); return; }
+    setIssuedCode(code);
+    setStep('verify');
+    notify('Reset code generated (shown below).', 'info');
+  };
+
+  const handleVerify = async () => {
+    if (!authService.verifyResetCode(email, code)) { notify('Invalid or expired code', 'error'); return; }
+    if (!newPassword || newPassword.length < 6) { notify('Password must be at least 6 characters', 'error'); return; }
+    const lower = email.toLowerCase();
+    const member = members.find(m => (m.email || '').toLowerCase() === lower);
+    if (!member) { notify('Member not found', 'error'); return; }
+    const updated = { ...member, password: newPassword };
+    setMembers((prev: Member[]) => prev.map(m => m.id === member.id ? updated : m));
+    try { if (isSheetsConfigured()) await sheetService.updateMember(updated); } catch (e) { console.error(e); }
+    authService.clearResetCode(email);
+    notify('Password updated successfully');
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold text-lg text-slate-800 dark:text-white">Reset Password</h3>
+          <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button>
+        </div>
+        {step === 'request' ? (
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Email</label>
+              <input value={email} onChange={e => setEmail(e.target.value)} type="email" className="w-full p-2 border rounded-lg mt-1 dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="you@example.com"/>
+            </div>
+            <button onClick={handleRequest} className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Request Code</button>
+            {issuedCode && (
+              <div className="mt-2 p-3 bg-slate-50 dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600">
+                <p className="text-xs text-slate-500">Your reset code:</p>
+                <p className="text-lg font-bold tracking-widest">{issuedCode}</p>
+                <p className="text-[10px] text-slate-400 mt-1">Code valid for 15 minutes.</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Email</label>
+              <input value={email} onChange={e => setEmail(e.target.value)} type="email" className="w-full p-2 border rounded-lg mt-1 dark:bg-slate-700 dark:border-slate-600 dark:text-white"/>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Reset Code</label>
+              <input value={code} onChange={e => setCode(e.target.value)} className="w-full p-2 border rounded-lg mt-1 dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="6-digit code"/>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">New Password</label>
+              <input value={newPassword} onChange={e => setNewPassword(e.target.value)} type="password" className="w-full p-2 border rounded-lg mt-1 dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="At least 6 characters"/>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setStep('request')} className="flex-1 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600">Back</button>
+              <button onClick={handleVerify} className="flex-1 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Update Password</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- Email Verification Modal ---
+const EmailVerificationModal = ({ show, onClose, notify }: { show: boolean, onClose: () => void, notify: (msg: string, type?: 'success'|'error'|'info') => void }) => {
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [issuedCode, setIssuedCode] = useState<string | null>(null);
+
+  if (!show) return null;
+
+  const handleRequest = () => {
+    if (!email) { notify('Please enter email', 'error'); return; }
+    const code = authService.requestVerification(email);
+    setIssuedCode(code);
+    notify('Verification code generated (shown below).', 'info');
+  };
+
+  const handleConfirm = () => {
+    if (!authService.confirmVerification(email, code)) { notify('Invalid or expired code', 'error'); return; }
+    notify('Email verified successfully');
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold text-lg text-slate-800 dark:text-white">Verify Email</h3>
+          <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Email</label>
+            <input value={email} onChange={e => setEmail(e.target.value)} type="email" className="w-full p-2 border rounded-lg mt-1 dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="you@example.com"/>
+          </div>
+          <button onClick={handleRequest} className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Request Code</button>
+          {issuedCode && (
+            <div className="mt-2 p-3 bg-slate-50 dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600">
+              <p className="text-xs text-slate-500">Your verification code:</p>
+              <p className="text-lg font-bold tracking-widest">{issuedCode}</p>
+              <p className="text-[10px] text-slate-400 mt-1">Code valid for 30 minutes.</p>
+            </div>
+          )}
+          <div>
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Verification Code</label>
+            <input value={code} onChange={e => setCode(e.target.value)} className="w-full p-2 border rounded-lg mt-1 dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="6-digit code"/>
+          </div>
+          <button onClick={handleConfirm} className="w-full py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Confirm Verification</button>
+        </div>
+      </div>
+    </div>
+  );
+};

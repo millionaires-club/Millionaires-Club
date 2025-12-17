@@ -65,6 +65,65 @@ export const authService = {
     }
   },
 
+  // --- Password Reset (client-side, code stored in localStorage) ---
+  generateCode: (): string => {
+    return Math.floor(100000 + Math.random() * 900000).toString(); // 6 digits
+  },
+
+  requestPasswordReset: (email: string, members: Member[], expiresMinutes = 15): string | null => {
+    const member = members.find(m => m.email?.toLowerCase() === email.toLowerCase());
+    if (!member) return null;
+    const code = authService.generateCode();
+    const expiresAt = Date.now() + expiresMinutes * 60 * 1000;
+    localStorage.setItem(`reset:${email.toLowerCase()}`, JSON.stringify({ code, expiresAt, memberId: member.id }));
+    return code;
+  },
+
+  verifyResetCode: (email: string, code: string): boolean => {
+    const raw = localStorage.getItem(`reset:${email.toLowerCase()}`);
+    if (!raw) return false;
+    try {
+      const { code: saved, expiresAt } = JSON.parse(raw);
+      if (Date.now() > expiresAt) return false;
+      return saved === code;
+    } catch {
+      return false;
+    }
+  },
+
+  clearResetCode: (email: string): void => {
+    localStorage.removeItem(`reset:${email.toLowerCase()}`);
+  },
+
+  // --- Email Verification (client-side) ---
+  requestVerification: (email: string, expiresMinutes = 30): string => {
+    const code = authService.generateCode();
+    const expiresAt = Date.now() + expiresMinutes * 60 * 1000;
+    localStorage.setItem(`verify:${email.toLowerCase()}`, JSON.stringify({ code, expiresAt }));
+    return code;
+  },
+
+  confirmVerification: (email: string, code: string): boolean => {
+    const raw = localStorage.getItem(`verify:${email.toLowerCase()}`);
+    if (!raw) return false;
+    try {
+      const { code: saved, expiresAt } = JSON.parse(raw);
+      if (Date.now() > expiresAt) return false;
+      const ok = saved === code;
+      if (ok) {
+        localStorage.setItem(`verified:${email.toLowerCase()}`, 'true');
+        localStorage.removeItem(`verify:${email.toLowerCase()}`);
+      }
+      return ok;
+    } catch {
+      return false;
+    }
+  },
+
+  isVerified: (email: string): boolean => {
+    return localStorage.getItem(`verified:${email.toLowerCase()}`) === 'true';
+  },
+
   // Store token in localStorage
   storeToken: (authToken: AuthToken): void => {
     localStorage.setItem('auth_token', authToken.token);
