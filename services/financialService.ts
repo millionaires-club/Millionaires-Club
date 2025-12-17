@@ -325,12 +325,18 @@ export const generateFinancialProjections = (
   const activeMembers = members.filter(m => m.accountStatus === 'Active');
   const activeLoans = loans.filter(l => l.status === 'ACTIVE');
 
+  // Normalize numeric inputs to avoid string concatenation from Sheets/localStorage
+  const toNumber = (val: any) => {
+    const n = Number(val);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   // Calculate current total balance
-  const currentBalance = members.reduce((sum, m) => sum + m.totalContribution, 0);
+  const currentBalance = members.reduce((sum, m) => sum + toNumber(m.totalContribution), 0);
 
   // Calculate average interest rate
   const avgInterestRate = activeLoans.length > 0
-    ? activeLoans.reduce((sum, l) => sum + (l.interestRate || 0), 0) / activeLoans.length
+    ? activeLoans.reduce((sum, l) => sum + toNumber(l.interestRate || 0), 0) / activeLoans.length
     : 0;
 
   for (let month = 1; month <= 12; month++) {
@@ -347,7 +353,7 @@ export const generateFinancialProjections = (
       (activeLoans.length * 1000) * (1 - month * 0.05);
 
     // Project interest income
-    const totalLoanBalance = activeLoans.reduce((sum, l) => sum + l.remainingBalance, 0);
+    const totalLoanBalance = activeLoans.reduce((sum, l) => sum + toNumber(l.remainingBalance), 0);
     const projectedInterest = 
       (totalLoanBalance * (avgInterestRate / 100)) / 12;
 
@@ -359,8 +365,10 @@ export const generateFinancialProjections = (
       (projectedInterest * month);
 
     // Calculate risk score (0-100)
-    const loanToAssetRatio = totalLoanBalance / currentBalance;
-    const delinquencyRate = activeLoans.filter(l => isPaymentLate(l)).length / activeLoans.length;
+    const loanToAssetRatio = currentBalance > 0 ? totalLoanBalance / currentBalance : 0;
+    const delinquencyRate = activeLoans.length > 0 
+      ? activeLoans.filter(l => isPaymentLate(l)).length / activeLoans.length 
+      : 0;
     const riskScore = Math.min(100, Math.round(
       (loanToAssetRatio * 40) + 
       (delinquencyRate * 60)
@@ -393,13 +401,18 @@ export const calculatePortfolioHealth = (
   averageLoanUtilization: number;
   healthScore: number;
 } => {
-  const totalAssets = members.reduce((sum, m) => sum + m.totalContribution, 0);
+  const toNumber = (val: any) => {
+    const n = Number(val);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const totalAssets = members.reduce((sum, m) => sum + toNumber(m.totalContribution), 0);
   const totalLoaned = loans
     .filter(l => l.status === 'ACTIVE')
-    .reduce((sum, l) => sum + l.remainingBalance, 0);
+    .reduce((sum, l) => sum + toNumber(l.remainingBalance), 0);
   
   const totalInterestEarned = loans.reduce(
-    (sum, l) => sum + (l.totalInterestAccrued || 0),
+    (sum, l) => sum + toNumber(l.totalInterestAccrued || 0),
     0
   );
 
