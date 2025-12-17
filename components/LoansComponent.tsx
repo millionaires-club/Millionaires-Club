@@ -186,6 +186,13 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
       return;
     }
 
+    // Check cosigner eligibility
+    const cosignerEligibility = checkEligibility(cosignerId);
+    if (!cosignerEligibility.eligible) {
+      notify(`Cosigner not eligible: ${cosignerEligibility.reason}`, "error");
+      return;
+    }
+
     const requestedAmount = parseFloat(loanAmount);
     if (isNaN(requestedAmount) || requestedAmount > (eligibility.limit || 0)) {
        notify("Invalid amount or exceeds limit.", "error");
@@ -241,11 +248,16 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
     };
 
     setLoans([newLoan, ...loans]);
+    const updatedMember = members.find(m => m.id === borrowerId);
     setMembers(members.map(m => m.id === borrowerId ? { ...m, activeLoanId: newLoan.id } : m));
     
     // Sync to Google Sheets
     if (isSheetsConfigured()) {
         sheetService.createLoan(newLoan).catch(err => console.error('Sheet sync error:', err));
+        // Sync updated member with activeLoanId
+        if (updatedMember) {
+            sheetService.updateMember({ ...updatedMember, activeLoanId: newLoan.id }).catch(err => console.error('Sheet sync error:', err));
+        }
     }
     
     // Create Transactions: Disbursal AND Fee
