@@ -844,32 +844,26 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                     font-family: 'Inter', sans-serif;
                     margin: 0;
                     padding: 0;
-                    width: 210mm;
-                    height: 297mm;
                     background-color: #fff;
-                    position: relative;
                     font-size: 10pt;
                     color: #1e293b;
                   }
                   /* Contract Border Style */
                   .page-container {
-                    position: absolute;
-                    top: 10mm;
-                    left: 10mm;
-                    right: 10mm;
-                    bottom: 10mm;
+                    width: calc(100% - 20mm);
+                    margin: 10mm auto;
                     border: 2px solid #C00000; /* Red Outer */
                     padding: 8px;
                     box-sizing: border-box;
                     display: flex;
                     flex-direction: column;
+                    page-break-inside: avoid;
                   }
                   .page-container.page-break { page-break-after: always; }
                   .page-container.second-page { page-break-before: always; }
                   .inner-border {
                     border: 1px solid #4472C4; /* Blue Inner */
-                    height: 100%;
-                    padding: 22px 28px;
+                    padding: 18px 24px;
                     box-sizing: border-box;
                     position: relative;
                     display: flex;
