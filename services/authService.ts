@@ -180,19 +180,43 @@ export const authService = {
     members: Member[],
     adminEmails: string[] = []
   ): AuthToken | null => {
-    // First, locate the member by email regardless of password. Google Sheets
-    // rows may omit the password field; we default to 'welcome123' in that case.
-    const member = members.find(m => m.email?.toLowerCase() === email.toLowerCase());
+    const lower = email.toLowerCase();
+    const isAdminEmail = adminEmails.map(e => e.toLowerCase()).includes(lower);
+
+    // Locate member by email
+    let member = members.find(m => m.email?.toLowerCase() === lower);
+
+    // If no member record exists but the email is in the admin list, create a virtual admin user
+    if (!member && isAdminEmail) {
+      member = {
+        id: 'ADMIN-0001',
+        name: 'Admin User',
+        nickname: 'Admin',
+        beneficiary: '',
+        accountStatus: 'Active',
+        email,
+        phone: '',
+        totalContribution: 0,
+        joinDate: new Date().toISOString().split('T')[0],
+        activeLoanId: null,
+        lastLoanPaidDate: null,
+        address: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        password: 'welcome123'
+      } as Member;
+    }
 
     if (!member) return null;
 
-    // If the member has no password set (e.g., synced from Sheets), accept the default.
+    // Accept default password when missing
     const expectedPassword = member.password || 'welcome123';
     if ((password || '').trim() !== expectedPassword) return null;
 
-    // Determine role (admins are matched by email list)
+    // Determine role (admins by list)
     let role: 'admin' | 'treasurer' | 'member' = 'member';
-    if (adminEmails.map(e => e.toLowerCase()).includes(email.toLowerCase())) {
+    if (isAdminEmail) {
       role = 'admin';
     }
 
