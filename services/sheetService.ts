@@ -35,6 +35,15 @@ export const sheetService = {
     if (!isSheetsConfigured()) return;
     return await callScript('update', 'Members', member);
   },
+  upsertMember: async (member: Member) => {
+    if (!isSheetsConfigured()) return;
+    const existing = await callScript('read', 'Members');
+    const exists = Array.isArray(existing) && existing.some((row: any) => String(row.id) === String(member.id));
+    if (exists) {
+      return await callScript('update', 'Members', member);
+    }
+    return await callScript('create', 'Members', member);
+  },
   deleteMember: async (id: string) => {
     if (!isSheetsConfigured()) return;
     return await callScript('delete', 'Members', { id });
@@ -53,6 +62,15 @@ export const sheetService = {
     if (!isSheetsConfigured()) return;
     return await callScript('update', 'Loans', loan);
   },
+  upsertLoan: async (loan: Loan) => {
+    if (!isSheetsConfigured()) return;
+    const existing = await callScript('read', 'Loans');
+    const exists = Array.isArray(existing) && existing.some((row: any) => String(row.id) === String(loan.id));
+    if (exists) {
+      return await callScript('update', 'Loans', loan);
+    }
+    return await callScript('create', 'Loans', loan);
+  },
 
   // --- Transactions ---
   getTransactions: async (): Promise<Transaction[]> => {
@@ -61,6 +79,15 @@ export const sheetService = {
   },
   createTransaction: async (transaction: Transaction) => {
     if (!isSheetsConfigured()) return;
+    return await callScript('create', 'Transactions', transaction);
+  },
+  upsertTransaction: async (transaction: Transaction) => {
+    if (!isSheetsConfigured()) return;
+    const existing = await callScript('read', 'Transactions');
+    const exists = Array.isArray(existing) && existing.some((row: any) => String(row.id) === String(transaction.id));
+    if (exists) {
+      return await callScript('update', 'Transactions', transaction);
+    }
     return await callScript('create', 'Transactions', transaction);
   },
 
@@ -76,5 +103,14 @@ export const sheetService = {
   updateApplication: async (app: LoanApplication) => {
     if (!isSheetsConfigured()) return;
     return await callScript('update', 'Applications', app);
+  },
+  upsertApplication: async (app: LoanApplication) => {
+    if (!isSheetsConfigured()) return;
+    const existing = await callScript('read', 'Applications');
+    const exists = Array.isArray(existing) && existing.some((row: any) => String(row.id) === String(app.id));
+    if (exists) {
+      return await callScript('update', 'Applications', app);
+    }
+    return await callScript('create', 'Applications', app);
   }
 };

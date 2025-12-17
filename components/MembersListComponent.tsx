@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Member } from '../types';
-import { Search, Plus, UserCheck, MoreVertical, Upload, Filter, X, Trash2, Award } from 'lucide-react';
+import { Search, Plus, UserCheck, MoreVertical, Upload, Filter, X, Trash2, Award, Download } from 'lucide-react';
 import { getMemberTier, MemberTier } from '../constants';
+import * as XLSX from 'xlsx';
 
 interface MembersListProps {
   members: Member[];
@@ -46,6 +47,45 @@ const MembersListComponent: React.FC<MembersListProps> = ({ members, setEditingM
 
   const hasActiveFilters = searchTerm || statusFilter !== 'All' || startDate || endDate;
 
+  // Export to Excel function
+  const exportToExcel = () => {
+    const dataToExport = filteredMembers.map(member => ({
+      'Member ID': member.id,
+      'Legal Name': member.name,
+      'Nickname': member.nickname || '-',
+      'Status': member.accountStatus,
+      'Tier': getMemberTier(member),
+      'Email': member.email,
+      'Phone': member.phone || '-',
+      'Address': member.address || '-',
+      'Total Contribution': member.totalContribution,
+      'Join Date': member.joinDate,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Members');
+
+    // Auto-size columns
+    const maxWidth = 50;
+    const colWidths = Object.keys(dataToExport[0] || {}).map(key => ({
+      wch: Math.min(
+        Math.max(
+          key.length,
+          ...dataToExport.map(row => String(row[key as keyof typeof row]).length)
+        ),
+        maxWidth
+      )
+    }));
+    worksheet['!cols'] = colWidths;
+
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `Millionaires_Club_Members_${timestamp}.xlsx`;
+
+    XLSX.writeFile(workbook, filename);
+  };
+
   // Helper for badge colors
   const getTierBadgeStyles = (tier: MemberTier) => {
       switch(tier) {
@@ -85,6 +125,13 @@ const MembersListComponent: React.FC<MembersListProps> = ({ members, setEditingM
             />
           </div>
           <div className="flex gap-2 w-full md:w-auto">
+            <button 
+              onClick={exportToExcel}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 dark:bg-emerald-700 border border-emerald-600 dark:border-emerald-700 text-white rounded-xl font-medium hover:bg-emerald-700 dark:hover:bg-emerald-800 transition-colors shadow-sm"
+              title="Export to Excel"
+            >
+              <Download size={18} /> <span className="hidden sm:inline">Export</span>
+            </button>
             <button 
               onClick={() => setShowBatchUpload(true)}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"

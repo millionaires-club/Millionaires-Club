@@ -213,7 +213,7 @@ const SystemTabComponent = ({ syncStatus, lastSyncTime, syncError, members, curr
                     try {
                       let successCount = 0;
                       for (const member of members) {
-                        await sheetService.createMember(member);
+                        await sheetService.upsertMember(member);
                         successCount++;
                       }
                       alert(`✅ Successfully synced ${successCount} members to Google Sheets!`);
