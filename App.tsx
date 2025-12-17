@@ -1059,8 +1059,8 @@ export default function App() {
   const handleAdminLogin = (e: React.FormEvent) => {
       e.preventDefault();
       const formData = new FormData(e.target as HTMLFormElement);
-      const email = formData.get('email') as string;
-      const password = formData.get('password') as string;
+      const email = ((formData.get('email') as string) || '').trim();
+      const password = ((formData.get('password') as string) || '').trim();
       
       const authToken = authService.authenticate(email, password, members, adminEmails);
       

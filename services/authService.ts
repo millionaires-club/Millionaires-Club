@@ -180,11 +180,11 @@ export const authService = {
     members: Member[],
     adminEmails: string[] = []
   ): AuthToken | null => {
-    const lower = email.toLowerCase();
-    const isAdminEmail = adminEmails.map(e => e.toLowerCase()).includes(lower);
+    const lower = (email || '').trim().toLowerCase();
+    const isAdminEmail = adminEmails.map(e => (e || '').trim().toLowerCase()).includes(lower);
 
     // Locate member by email
-    let member = members.find(m => m.email?.toLowerCase() === lower);
+    let member = members.find(m => (m.email || '').trim().toLowerCase() === lower);
 
     // If no member record exists but the email is in the admin list, create a virtual admin user
     if (!member && isAdminEmail) {
