@@ -40,6 +40,22 @@ const getNextMemberId = (currentMembers: Member[]) => {
   return `MC-${maxId + 1}`;
 };
 
+// Deduplicate and normalize member data (handles Sheet/localStorage string values)
+const normalizeMembers = (list: Member[]): Member[] => {
+  const seen = new Set<string>();
+  return list.reduce<Member[]>((acc, m) => {
+    const id = (m.id || '').trim();
+    if (!id || seen.has(id)) return acc;
+    seen.add(id);
+    acc.push({
+      ...m,
+      id,
+      totalContribution: Number(m.totalContribution) || 0
+    });
+    return acc;
+  }, []);
+};
+
 // --- Extracted Page Components ---
 
 const LandingPage = ({ setViewMode }: { setViewMode: (mode: any) => void }) => (
@@ -677,7 +693,7 @@ export default function App() {
   // Initial loading from Google Sheets if configured
   const [members, setMembers] = useState<Member[]>(() => {
     const saved = localStorage.getItem('mpm_members');
-    return saved ? JSON.parse(saved) : INITIAL_MEMBERS;
+    return normalizeMembers(saved ? JSON.parse(saved) : INITIAL_MEMBERS);
   });
 
   const [loans, setLoans] = useState<Loan[]>(() => {
@@ -720,7 +736,7 @@ export default function App() {
           sheetService.getTransactions(),
           sheetService.getApplications()
         ]);
-        if(m.length) setMembers(m);
+        if(m.length) setMembers(normalizeMembers(m));
         if(l.length) setLoans(l);
         if(t.length) setTransactions(t);
         if(a.length) setLoanApplications(a);

@@ -80,8 +80,6 @@ const RAW_MEMBERS_DATA: (string | number)[][] = [
   [1041, "Cing Sian Nem", "Nu Nemno", "Inactive", "cing@example.com", "-", 0, "2017-01-08"],
   [1042, "Langh Khai Khai", "Pa Langh Khai", "Inactive", "langh@example.com", "-", 0, "2017-01-08"],
   [1043, "Ciin Sian Nem", "Nu Nembawi", "Inactive", "ciin@example.com", "-", 0, "2017-01-17"],
-  [1044, "Dim Khan Lian", "Nu Lian", "Inactive", "dim@example.com", "-", 0, "2017-03-01"],
-  [1045, "Niang Tawi Mang", "Niangsen", "Inactive", "niang@example.com", "-", 0, "2017-03-01"],
   [1046, "En Khan Zam", "Pa Zam", "Active", "en@example.com", "-", 2140, "2017-01-18"],
   [1047, "Niang Ngaih Man", "Nu Mansen", "Inactive", "niang@example.com", "-", 0, "2017-01-18"],
   [1048, "Ciang Ngaih Vung", "U Vungpi", "Inactive", "ciang@example.com", "-", 0, "2017-01-18"],
