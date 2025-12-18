@@ -40,6 +40,12 @@ const getNextMemberId = (currentMembers: Member[]) => {
   return `MC-${maxId + 1}`;
 };
 
+// Helper to convert any value to number, handling strings from Google Sheets
+const toNumber = (val: any): number => {
+  const n = Number(val);
+  return Number.isFinite(n) ? n : 0;
+};
+
 // Deduplicate and normalize member data (handles Sheet/localStorage string values)
 const normalizeMembers = (list: Member[]): Member[] => {
   const seen = new Set<string>();
@@ -50,10 +56,41 @@ const normalizeMembers = (list: Member[]): Member[] => {
     acc.push({
       ...m,
       id,
-      totalContribution: Number(m.totalContribution) || 0
+      totalContribution: toNumber(m.totalContribution)
     });
     return acc;
   }, []);
+};
+
+// Normalize loans (convert all numeric fields from Sheets string values)
+const normalizeLoans = (list: Loan[]): Loan[] => {
+  return list.map(l => ({
+    ...l,
+    originalAmount: toNumber(l.originalAmount),
+    remainingBalance: toNumber(l.remainingBalance),
+    termMonths: toNumber(l.termMonths),
+    interestRate: toNumber(l.interestRate),
+    totalInterestAccrued: toNumber(l.totalInterestAccrued),
+    missedPayments: toNumber(l.missedPayments),
+    gracePeriodDays: toNumber(l.gracePeriodDays)
+  }));
+};
+
+// Normalize transactions (convert amount field)
+const normalizeTransactions = (list: Transaction[]): Transaction[] => {
+  return list.map(t => ({
+    ...t,
+    amount: toNumber(t.amount)
+  }));
+};
+
+// Normalize loan applications (convert amount and term fields)
+const normalizeApplications = (list: LoanApplication[]): LoanApplication[] => {
+  return list.map(app => ({
+    ...app,
+    amount: toNumber(app.amount),
+    term: toNumber(app.term)
+  }));
 };
 
 // --- Extracted Page Components ---
@@ -737,9 +774,9 @@ export default function App() {
           sheetService.getApplications()
         ]);
         if(m.length) setMembers(normalizeMembers(m));
-        if(l.length) setLoans(l);
-        if(t.length) setTransactions(t);
-        if(a.length) setLoanApplications(a);
+        if(l.length) setLoans(normalizeLoans(l));
+        if(t.length) setTransactions(normalizeTransactions(t));
+        if(a.length) setLoanApplications(normalizeApplications(a));
         setSyncStatus('idle');
         setLastSyncTime(new Date());
         notify("✓ Data synced with Google Sheets", "success");

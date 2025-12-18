@@ -32,7 +32,7 @@ export const formatTime = (dateString: string) => {
   });
 };
 
-// Helper to generate IDs MC-1001 to MC-1210
+// Helper to generate IDs MC-10001 to MC-10210
 const generateId = (num: number) => `MC-${(1000 + num).toString()}`;
 
 // Raw Data Structure: [ID Suffix, Name, Nickname, Status, Email, Phone, Total Contribution, Join Date]

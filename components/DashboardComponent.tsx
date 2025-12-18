@@ -18,8 +18,8 @@ const DashboardComponent: React.FC<DashboardProps> = ({ members, loans, transact
   const activeMembersCount = members.filter(m => m.accountStatus === 'Active').length;
   const inactiveMembersCount = members.filter(m => m.accountStatus === 'Inactive').length;
   
-  const totalFunds = members.reduce((sum, m) => sum + m.totalContribution, 0);
-  const totalLoaned = loans.filter(l => l.status === 'ACTIVE').reduce((sum, l) => sum + l.originalAmount, 0);
+  const totalFunds = members.reduce((sum, m) => sum + Number(m.totalContribution), 0);
+  const totalLoaned = loans.filter(l => l.status === 'ACTIVE').reduce((sum, l) => sum + Number(l.originalAmount), 0);
   const activeLoanCount = loans.filter(l => l.status === 'ACTIVE').length;
   
   const pendingApplicationsCount = loanApplications.filter(app => app.status === 'PENDING').length;
