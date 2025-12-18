@@ -1,80 +1,56 @@
 
 import { Member, Loan, Transaction, LoanApplication } from '../types';
+import { sheetService } from './sheetService';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
-const getHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
-  };
-};
-
+// Using Google Sheets as the data source via Google Apps Script
 export const api = {
   auth: {
     login: async (credentials: any) => {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
-      });
-      if (!res.ok) throw new Error('Login failed');
-      return res.json();
+      // For GitHub Pages + Google Sheets, use simple localStorage-based auth
+      const users = await sheetService.getMembers();
+      const user = users.find((u: any) => u.email === credentials.email);
+      if (!user) throw new Error('User not found');
+      
+      // Store basic auth info
+      localStorage.setItem('token', JSON.stringify(user));
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      return { success: true, user };
     },
     me: async () => {
-      const res = await fetch(`${API_URL}/auth/me`, { headers: getHeaders() });
-      return res.json();
+      const currentUser = localStorage.getItem('currentUser');
+      if (!currentUser) throw new Error('Not authenticated');
+      return JSON.parse(currentUser);
     }
   },
   members: {
     getAll: async (): Promise<Member[]> => {
-      const res = await fetch(`${API_URL}/members`, { headers: getHeaders() });
-      return res.json();
+      return await sheetService.getMembers();
     },
     create: async (member: Partial<Member>) => {
-      const res = await fetch(`${API_URL}/members`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(member),
-      });
-      return res.json();
+      return await sheetService.createMember(member as Member);
     },
     update: async (id: string, updates: Partial<Member>) => {
-      const res = await fetch(`${API_URL}/members/${id}`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(updates),
-      });
-      return res.json();
+      const members = await sheetService.getMembers();
+      const member = members.find(m => m.id === id);
+      if (!member) throw new Error('Member not found');
+      const updated = { ...member, ...updates };
+      return await sheetService.updateMember(updated);
     }
   },
   loans: {
     getAll: async (): Promise<Loan[]> => {
-      const res = await fetch(`${API_URL}/loans`, { headers: getHeaders() });
-      return res.json();
+      return await sheetService.getLoans();
     },
     create: async (loanData: any) => {
-      const res = await fetch(`${API_URL}/loans`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(loanData),
-      });
-      return res.json();
+      return await sheetService.createLoan(loanData);
     }
   },
   transactions: {
     getAll: async (): Promise<Transaction[]> => {
-      const res = await fetch(`${API_URL}/transactions`, { headers: getHeaders() });
-      return res.json();
+      return await sheetService.getTransactions();
     },
     create: async (txData: any) => {
-      const res = await fetch(`${API_URL}/transactions`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(txData),
-      });
-      return res.json();
+      return await sheetService.createTransaction(txData);
     }
   }
 };
