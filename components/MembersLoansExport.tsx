@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AlertCircle, CheckCircle, Download, Loader } from 'lucide-react';
+import { formatDate } from '../constants';
 
 interface MemberLoanData {
   id: string;
@@ -73,7 +74,7 @@ export const MembersLoansExport: React.FC = () => {
           row.totalLoansTaken.toFixed(2),
           row.totalOutstandingBalance.toFixed(2),
           row.numberOfLoans,
-          new Date(row.joinDate).toLocaleDateString(),
+          formatDate(row.joinDate),
         ].join(',')
       ),
     ].join('\n');

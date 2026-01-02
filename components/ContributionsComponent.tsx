@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Member, Transaction } from '../types';
 import { Plus, Download, Search, ChevronDown, Check } from 'lucide-react';
 import { sheetService, isSheetsConfigured } from '../services/sheetService';
+import { formatDate } from '../constants';
 
 interface ContributionsProps {
   members: Member[];
@@ -228,7 +229,7 @@ const ContributionsComponent: React.FC<ContributionsProps> = ({ members, setMemb
                 return (
                   <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
-                        {new Date(t.date).toLocaleDateString()}
+                      {formatDate(t.date)}
                         <div className="text-[10px] text-slate-400 dark:text-slate-500">Rec: {t.receivedBy || 'System'}</div>
                     </td>
                     <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{member?.name || t.memberId}</td>

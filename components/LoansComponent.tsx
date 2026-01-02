@@ -4,6 +4,7 @@ import { Member, Loan, Transaction, LoanApplication } from '../types';
 import { AlertCircle, CheckCircle, CreditCard, X, DollarSign, Clock, Calendar, Printer, History, Search, ChevronDown, Check, UserPlus, AlertTriangle, FileText, Wallet, FileSignature, Hourglass } from 'lucide-react';
 import { sheetService, isSheetsConfigured } from '../services/sheetService';
 import { financialService } from '../services/financialService';
+import { formatDate, formatDateTime } from '../constants';
 
 interface LoansProps {
   members: Member[];
@@ -460,9 +461,9 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
        }
        notify("Loan fully paid off!", "success");
      } else {
-       const msg = isLate 
-           ? `Repayment recorded with $5.00 Late Fee applied. Next due: ${new Date(updatedNextPaymentDue).toLocaleDateString()}`
-           : `Repayment recorded. Next due: ${new Date(updatedNextPaymentDue).toLocaleDateString()}`;
+         const msg = isLate 
+           ? `Repayment recorded with $5.00 Late Fee applied. Next due: ${formatDate(updatedNextPaymentDue)}`
+           : `Repayment recorded. Next due: ${formatDate(updatedNextPaymentDue)}`;
        notify(msg, isLate ? 'info' : 'success');
      }
   };
@@ -740,8 +741,8 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                     <div class="title">LOAN AGREEMENT</div>
 
                     <div class="info-row">
-                        <div>Date: ${issueDate.toLocaleDateString()}</div>
-                        <div>Principal Amount: $${loan.originalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                      <div>Date: ${formatDate(issueDate)}</div>
+                      <div>Principal Amount: $${loan.originalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                     </div>
 
                     <div class="section">
@@ -755,7 +756,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                         <div class="section-title">2. REPAYMENT TERMS</div>
                         <div class="body-text">For value received, the Borrower and Co-Signer promise to pay the Lender the Principal Amount according to the following schedule:</div>
                         <ul>
-                            <li><strong>Installments:</strong> Monthly payments of <strong>$${monthlyPayment.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong> beginning on <strong>${firstPaymentDate.toLocaleDateString()}</strong> and continuing until <strong>${endDate.toLocaleDateString()}</strong>.</li>
+                            <li><strong>Installments:</strong> Monthly payments of <strong>$${monthlyPayment.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong> beginning on <strong>${formatDate(firstPaymentDate)}</strong> and continuing until <strong>${formatDate(endDate)}</strong>.</li>
                             <li><strong>Prepayment:</strong> The Borrower may pay off the loan early without penalty.</li>
                             <li><strong>Late Fee:</strong> If a payment is more than 15 days late, a late fee of <strong>$25.00</strong> shall be added to that payment.</li>
                         </ul>
@@ -784,7 +785,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                             <span class="sig-label">Borrower:</span>
                             <div class="sig-line">${loan.borrowerSignature ? `<img src="${loan.borrowerSignature}" style="max-height:40px;" />` : ''}</div>
                             <span class="sig-label" style="width:auto;">Date:</span>
-                            <div class="sig-date">${loan.signedDate ? new Date(loan.signedDate).toLocaleDateString() : ''}</div>
+                            <div class="sig-date">${loan.signedDate ? formatDate(loan.signedDate) : ''}</div>
                         </div>
                         <div style="margin-top:-20px; margin-bottom:20px; font-size:9pt;">(${borrower?.name})</div>
 
@@ -793,7 +794,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                             <span class="sig-label">Co-Signer:</span>
                             <div class="sig-line">${loan.cosignerSignature ? `<img src="${loan.cosignerSignature}" style="max-height:40px;" />` : ''}</div>
                             <span class="sig-label" style="width:auto;">Date:</span>
-                            <div class="sig-date">${loan.cosignerSignedDate ? new Date(loan.cosignerSignedDate).toLocaleDateString() : ''}</div>
+                            <div class="sig-date">${loan.cosignerSignedDate ? formatDate(loan.cosignerSignedDate) : ''}</div>
                         </div>
                         <div style="margin-top:-20px; margin-bottom:20px; font-size:9pt;">(${cosigner?.name})</div>
 
@@ -802,7 +803,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                             <span class="sig-label">Lender:</span>
                             <div class="sig-line">${authorizedSigner}</div>
                             <span class="sig-label" style="width:auto;">Date:</span>
-                            <div class="sig-date">${issueDate.toLocaleDateString()}</div>
+                            <div class="sig-date">${formatDate(issueDate)}</div>
                         </div>
                         <div style="margin-top:-20px; font-size:9pt;">(${authorizedSigner}, Authorized Board Member)</div>
                     </div>
@@ -1150,7 +1151,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                                 <div class="info-col">
                                     <div class="info-row">
                                         <span class="info-label">Issued</span>
-                                        <span class="info-val">${new Date(scheduleLoan.startDate).toLocaleDateString()}</span>
+                                      <span class="info-val">${formatDate(scheduleLoan.startDate)}</span>
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label">Status</span>
@@ -1186,13 +1187,13 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                                             return `
                                             <tr>
                                                 <td class="num-col">${row.number}</td>
-                                                <td>${row.dueDate.toLocaleDateString()}</td>
+                                                <td>${formatDate(row.dueDate)}</td>
                                                 <td class="amount-col" style="text-align:right;">$${row.estimated.toFixed(2)}</td>
                                                 <td class="amount-col" style="text-align:right; color:${row.actual ? '#059669' : '#94a3b8'};">
                                                     ${row.actual ? '$' + row.actual.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}
                                                 </td>
                                                 <td style="text-align:right; font-size:8pt; color:#64748b;">
-                                                    ${row.actualDate ? row.actualDate.toLocaleDateString() : ''}
+                                                  ${row.actualDate ? formatDate(row.actualDate) : ''}
                                                 </td>
                                                 <td style="text-align:center;">
                                                     <span class="status-pill ${statusClass}">${statusText}</span>
@@ -1205,7 +1206,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
 
                             <div class="footer">
                                 &copy; 2025 Millionaires Club Board of Directors • Official Document<br>
-                                Generated on ${new Date().toLocaleString()}
+                                        Generated on ${formatDateTime(new Date())}
                             </div>
                         </div>
                     </div>
@@ -1253,13 +1254,13 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                                     return `
                                     <tr>
                                       <td class="num-col">${row.number}</td>
-                                      <td>${row.dueDate.toLocaleDateString()}</td>
+                                      <td>${formatDate(row.dueDate)}</td>
                                       <td class="amount-col" style="text-align:right;">$${row.estimated.toFixed(2)}</td>
                                       <td class="amount-col" style="text-align:right; color:${row.actual ? '#059669' : '#94a3b8'};">
                                         ${row.actual ? '$' + row.actual.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}
                                       </td>
                                       <td style="text-align:right; font-size:8pt; color:#64748b;">
-                                        ${row.actualDate ? row.actualDate.toLocaleDateString() : ''}
+                                        ${row.actualDate ? formatDate(row.actualDate) : ''}
                                       </td>
                                       <td style="text-align:center;">
                                         <span class="status-pill ${statusClass}">${statusText}</span>
@@ -1272,7 +1273,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
 
                             <div class="footer">
                               &copy; 2025 Millionaires Club Board of Directors • Official Document<br>
-                              Generated on ${new Date().toLocaleString()}
+                              Generated on ${formatDateTime(new Date())}
                             </div>
                           </div>
                         </div>
@@ -1348,7 +1349,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                                  <div className="flex justify-between items-center">
                                      <span className="text-xs text-slate-500 dark:text-slate-400">Due Date</span>
                                      <span className={`text-sm font-medium ${isLate ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-700 dark:text-slate-200'}`}>
-                                         {new Date(repaymentLoan.nextPaymentDue).toLocaleDateString()}
+                                       {formatDate(repaymentLoan.nextPaymentDue)}
                                      </span>
                                  </div>
                              </div>
@@ -1812,7 +1813,7 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                    return (
                      <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                        <td className="px-3 py-2 text-slate-500 dark:text-slate-400">
-                           {new Date(t.date).toLocaleDateString()}
+                            {formatDate(t.date)}
                            <div className="text-[10px] text-slate-400 dark:text-slate-500">Via {t.paymentMethod}</div>
                        </td>
                        <td className="px-3 py-2 font-medium text-slate-800 dark:text-slate-200">{borrower?.name || t.memberId}</td>
@@ -1878,10 +1879,10 @@ const LoansComponent: React.FC<LoansProps> = ({ members, setMembers, loans, setL
                  <div className="flex-1">
                    <h4 className="font-bold text-slate-800 dark:text-white">{borrower?.name} <span className="text-slate-400 font-normal text-sm">({loan.borrowerId})</span></h4>
                    <div className="text-sm text-slate-500 dark:text-slate-400 mt-2 flex flex-wrap gap-2 items-center">
-                     <span className="bg-slate-50 dark:bg-slate-700 px-2 py-1 rounded border border-slate-100 dark:border-slate-600">Started: {new Date(loan.startDate).toLocaleDateString()}</span>
+                     <span className="bg-slate-50 dark:bg-slate-700 px-2 py-1 rounded border border-slate-100 dark:border-slate-600">Started: {formatDate(loan.startDate)}</span>
                      <span className="bg-slate-50 dark:bg-slate-700 px-2 py-1 rounded border border-slate-100 dark:border-slate-600">Term: {loan.termMonths}mo</span>
                      <span className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded border border-amber-100 dark:border-amber-800">
-                       <Clock size={12}/> Next Due: {new Date(loan.nextPaymentDue).toLocaleDateString()}
+                       <Clock size={12}/> Next Due: {formatDate(loan.nextPaymentDue)}
                      </span>
                      {loan.cosignerId && (
                          <span className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2 py-1 rounded border border-purple-100 dark:border-purple-800 flex items-center gap-1">

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { sheetService, isSheetsConfigured } from '../services/sheetService';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { getMemberTier, MemberTier } from '../constants';
+import { getMemberTier, MemberTier, formatDate, formatDateTime } from '../constants';
 import SignaturePad from './SignaturePad'; 
 
 interface MemberPortalProps {
@@ -84,7 +84,7 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
   const chartData = transactions
     .filter(t => t.memberId === member.id && t.type === 'CONTRIBUTION')
     .slice(0, 12)
-    .map(t => ({ date: new Date(t.date).toLocaleDateString(), amount: t.amount }));
+        .map(t => ({ date: formatDate(t.date), amount: t.amount }));
 
   // -- Handlers --
   
@@ -207,19 +207,7 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
     notify("Copied to clipboard!");
   };
 
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString();
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric',
-      hour: 'numeric', 
-      minute: '2-digit',
-      hour12: true 
-    });
-  };
+    const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
   const getTierBadgeStyles = (tier: MemberTier) => {
       switch(tier) {
@@ -351,7 +339,7 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
                             <div class="title">LOAN AGREEMENT</div>
 
                             <div class="info-row">
-                                <div>Date: ${issueDate.toLocaleDateString()}</div>
+                                <div>Date: ${formatDate(issueDate)}</div>
                                 <div>Principal Amount: $${agreementLoan.originalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                             </div>
 
@@ -366,7 +354,7 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
                                 <div class="section-title">2. REPAYMENT TERMS</div>
                                 <div class="body-text">For value received, the Borrower and Co-Signer promise to pay the Lender the Principal Amount according to the following schedule:</div>
                                 <ul>
-                                    <li><strong>Installments:</strong> Monthly payments of <strong>$${monthlyPayment.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong> beginning on <strong>${firstPaymentDate.toLocaleDateString()}</strong> and continuing until <strong>${endDate.toLocaleDateString()}</strong>.</li>
+                                    <li><strong>Installments:</strong> Monthly payments of <strong>$${monthlyPayment.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong> beginning on <strong>${formatDate(firstPaymentDate)}</strong> and continuing until <strong>${formatDate(endDate)}</strong>.</li>
                                     <li><strong>Prepayment:</strong> The Borrower may pay off the loan early without penalty.</li>
                                     <li><strong>Late Fee:</strong> If a payment is more than 15 days late, a late fee of <strong>$25.00</strong> shall be added to that payment.</li>
                                 </ul>
@@ -395,7 +383,7 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
                                     <span class="sig-label">Borrower:</span>
                                     <div class="sig-line">${agreementLoan.borrowerSignature ? `<img src="${agreementLoan.borrowerSignature}" style="max-height:40px;" />` : ''}</div>
                                     <span class="sig-label" style="width:auto;">Date:</span>
-                                    <div class="sig-date">${agreementLoan.signedDate ? new Date(agreementLoan.signedDate).toLocaleDateString() : ''}</div>
+                                    <div class="sig-date">${agreementLoan.signedDate ? formatDate(agreementLoan.signedDate) : ''}</div>
                                 </div>
                                 <div style="margin-top:-20px; margin-bottom:20px; font-size:9pt;">(${borrower?.name})</div>
 
@@ -404,7 +392,7 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
                                     <span class="sig-label">Co-Signer:</span>
                                     <div class="sig-line">${agreementLoan.cosignerSignature ? `<img src="${agreementLoan.cosignerSignature}" style="max-height:40px;" />` : ''}</div>
                                     <span class="sig-label" style="width:auto;">Date:</span>
-                                    <div class="sig-date">${agreementLoan.cosignerSignedDate ? new Date(agreementLoan.cosignerSignedDate).toLocaleDateString() : ''}</div>
+                                    <div class="sig-date">${agreementLoan.cosignerSignedDate ? formatDate(agreementLoan.cosignerSignedDate) : ''}</div>
                                 </div>
                                 <div style="margin-top:-20px; margin-bottom:20px; font-size:9pt;">(${cosigner?.name})</div>
 
@@ -413,7 +401,7 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
                                     <span class="sig-label">Lender:</span>
                                     <div class="sig-line">${authorizedSigner}</div>
                                     <span class="sig-label" style="width:auto;">Date:</span>
-                                    <div class="sig-date">${issueDate.toLocaleDateString()}</div>
+                                    <div class="sig-date">${formatDate(issueDate)}</div>
                                 </div>
                                 <div style="margin-top:-20px; font-size:9pt;">(${authorizedSigner}, Authorized Board Member)</div>
                             </div>
@@ -549,7 +537,7 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
                                     <div class="info-row"><span class="info-label">Member ID</span><span class="info-val">${borrower?.id}</span></div>
                                 </div>
                                 <div class="info-col">
-                                    <div class="info-row"><span class="info-label">Issued</span><span class="info-val">${new Date(scheduleLoan.startDate).toLocaleDateString()}</span></div>
+                                    <div class="info-row"><span class="info-label">Issued</span><span class="info-val">${formatDate(scheduleLoan.startDate)}</span></div>
                                     <div class="info-row"><span class="info-label">Status</span><span class="info-val" style="text-transform:uppercase;">${scheduleLoan.status}</span></div>
                                 </div>
                             </div>
@@ -560,12 +548,12 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
                                         ${schedule.map((row, idx) => {
                                             let statusClass = 'status-pending'; let statusText = 'Pending';
                                             if (row.actual) { statusClass = 'status-paid'; statusText = 'PAID'; } else if (new Date() > row.dueDate) { statusClass = 'status-due'; statusText = 'OVERDUE'; }
-                                            return `<tr><td class="num-col">${row.number}</td><td>${row.dueDate.toLocaleDateString()}</td><td class="amount-col" style="text-align:right;">$${row.estimated.toFixed(2)}</td><td class="amount-col" style="text-align:right; color:${row.actual ? '#059669' : '#94a3b8'};">${row.actual ? '$' + row.actual.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td><td style="text-align:right; font-size:8pt; color:#64748b;">${row.actualDate ? row.actualDate.toLocaleDateString() : ''}</td><td style="text-align:center;"><span class="status-pill ${statusClass}">${statusText}</span></td></tr>`
+                                            return `<tr><td class="num-col">${row.number}</td><td>${formatDate(row.dueDate)}</td><td class="amount-col" style="text-align:right;">$${row.estimated.toFixed(2)}</td><td class="amount-col" style="text-align:right; color:${row.actual ? '#059669' : '#94a3b8'};">${row.actual ? '$' + row.actual.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td><td style="text-align:right; font-size:8pt; color:#64748b;">${row.actualDate ? formatDate(row.actualDate) : ''}</td><td style="text-align:center;"><span class="status-pill ${statusClass}">${statusText}</span></td></tr>`
                                         }).join('')}
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="footer">&copy; 2025 Millionaires Club Board of Directors • Official Document<br>Generated on ${new Date().toLocaleString()}</div>
+                            <div class="footer">&copy; 2025 Millionaires Club Board of Directors • Official Document<br>Generated on ${formatDateTime(new Date())}</div>
                         </div>
                     </div>
                   </div>
@@ -801,7 +789,7 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
                                                     <span>•</span>
                                                     <span>{loan.termMonths} months</span>
                                                     <span>•</span>
-                                                    <span>Issued: {new Date(loan.startDate).toLocaleDateString()}</span>
+                                                    <span>Issued: {formatDate(loan.startDate)}</span>
                                                 </div>
                                             </div>
                                             <button
@@ -820,7 +808,7 @@ const MemberPortal: React.FC<MemberPortalProps> = ({
                     
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                         <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2"><ArrowRightLeft size={20} className="text-blue-600 dark:text-blue-400"/> Loan History</h3><div className="text-sm text-slate-500 dark:text-slate-400">Total Borrowed: <span className="font-bold text-slate-800 dark:text-white">${myLoans.reduce((sum, l) => sum + l.originalAmount, 0).toLocaleString()}</span></div></div>
-                        <div className="overflow-hidden"><table className="w-full text-sm text-left"><thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-700"><tr><th className="px-4 py-3">Loan ID</th><th className="px-4 py-3">Date Issued</th><th className="px-4 py-3">Term</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-right">Balance</th><th className="px-4 py-3 text-right">Status</th><th className="px-4 py-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{myLoans.map(loan => (<tr key={loan.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30"><td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">{loan.id}</td><td className="px-4 py-3 text-slate-700 dark:text-slate-300">{new Date(loan.startDate).toLocaleDateString()}</td><td className="px-4 py-3 text-slate-700 dark:text-slate-300">{loan.termMonths} Months</td><td className="px-4 py-3 text-right font-bold text-slate-800 dark:text-white">${loan.originalAmount.toLocaleString()}</td><td className="px-4 py-3 text-right font-medium text-blue-600 dark:text-blue-400">${loan.remainingBalance.toLocaleString()}</td><td className="px-4 py-3 text-right"><span className={`text-xs font-bold px-2 py-1 rounded border ${loan.status === 'ACTIVE' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-800' : loan.status === 'PAID' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-100 dark:border-red-800'}`}>{loan.status}</span></td><td className="px-4 py-3 text-right flex gap-2 justify-end">{loan.status === 'ACTIVE' && (<><button onClick={() => setSigningLoan(loan)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-600 rounded text-slate-500 dark:text-slate-400" title="Sign Agreement"><PenTool size={16}/></button><button onClick={() => setAgreementLoan(loan)} className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400" title="View Agreement"><FileText size={16}/></button><button onClick={() => setScheduleLoan(loan)} className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400" title="View Schedule"><Calendar size={16}/></button></>)}{loan.status === 'PAID' && (<><button onClick={() => setAgreementLoan(loan)} className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400" title="View Agreement"><FileText size={16}/></button><button onClick={() => setScheduleLoan(loan)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-600 rounded text-slate-500 dark:text-slate-400" title="View Schedule"><Calendar size={16}/></button></>)}</td></tr>))}</tbody></table></div>
+                        <div className="overflow-hidden"><table className="w-full text-sm text-left"><thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-700"><tr><th className="px-4 py-3">Loan ID</th><th className="px-4 py-3">Date Issued</th><th className="px-4 py-3">Term</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-right">Balance</th><th className="px-4 py-3 text-right">Status</th><th className="px-4 py-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{myLoans.map(loan => (<tr key={loan.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30"><td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">{loan.id}</td><td className="px-4 py-3 text-slate-700 dark:text-slate-300">{formatDate(loan.startDate)}</td><td className="px-4 py-3 text-slate-700 dark:text-slate-300">{loan.termMonths} Months</td><td className="px-4 py-3 text-right font-bold text-slate-800 dark:text-white">${loan.originalAmount.toLocaleString()}</td><td className="px-4 py-3 text-right font-medium text-blue-600 dark:text-blue-400">${loan.remainingBalance.toLocaleString()}</td><td className="px-4 py-3 text-right"><span className={`text-xs font-bold px-2 py-1 rounded border ${loan.status === 'ACTIVE' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-800' : loan.status === 'PAID' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-100 dark:border-red-800'}`}>{loan.status}</span></td><td className="px-4 py-3 text-right flex gap-2 justify-end">{loan.status === 'ACTIVE' && (<><button onClick={() => setSigningLoan(loan)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-600 rounded text-slate-500 dark:text-slate-400" title="Sign Agreement"><PenTool size={16}/></button><button onClick={() => setAgreementLoan(loan)} className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400" title="View Agreement"><FileText size={16}/></button><button onClick={() => setScheduleLoan(loan)} className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400" title="View Schedule"><Calendar size={16}/></button></>)}{loan.status === 'PAID' && (<><button onClick={() => setAgreementLoan(loan)} className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400" title="View Agreement"><FileText size={16}/></button><button onClick={() => setScheduleLoan(loan)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-600 rounded text-slate-500 dark:text-slate-400" title="View Schedule"><Calendar size={16}/></button></>)}</td></tr>))}</tbody></table></div>
                     </div>
                 </div>
              )}

@@ -4,6 +4,7 @@ import { Member, Loan, Transaction, LoanApplication } from '../types';
 import { Users, Wallet, CreditCard, TrendingUp, DollarSign, AlertCircle, Calendar, UserCheck, UserX, ChevronRight, CheckCircle, Bell } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts';
 import LatePaymentAlerts from './LatePaymentAlerts';
+import { formatDate } from '../constants';
 
 interface DashboardProps {
   members: Member[];
@@ -28,7 +29,7 @@ const DashboardComponent: React.FC<DashboardProps> = ({ members, loans, transact
   const chartData = transactions
     .filter(t => t.type === 'CONTRIBUTION')
     .slice(0, 50) 
-    .map(t => ({ date: new Date(t.date).toLocaleDateString(), amount: t.amount }));
+    .map(t => ({ date: formatDate(t.date), amount: t.amount }));
 
   // --- Loan Dues Logic ---
   const activeLoans = loans
@@ -170,7 +171,7 @@ const DashboardComponent: React.FC<DashboardProps> = ({ members, loans, transact
                                       <td className="px-5 py-3">
                                           <div className={`flex items-center gap-1.5 ${isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-600 dark:text-slate-400'}`}>
                                               {isOverdue && <AlertCircle size={14}/>}
-                                              {dueDate.toLocaleDateString()}
+                                              {formatDate(dueDate)}
                                           </div>
                                           {isOverdue && <div className="text-[10px] text-red-500 dark:text-red-400">Late Fee Applies</div>}
                                       </td>
@@ -345,7 +346,7 @@ const DashboardComponent: React.FC<DashboardProps> = ({ members, loans, transact
               transactions
                 .filter(t => t.type === 'CONTRIBUTION' && new Date(t.date) >= last30Days)
                 .forEach(t => {
-                  const day = new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  const day = formatDate(t.date);
                   dailyContributions[day] = (dailyContributions[day] || 0) + t.amount;
                 });
               

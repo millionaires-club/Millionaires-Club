@@ -1,4 +1,5 @@
 import { Loan, Member, Transaction, PaymentSchedule, FinancialProjection } from '../types';
+import { formatDate } from '../constants';
 
 /**
  * Financial Service
@@ -375,7 +376,7 @@ export const generateFinancialProjections = (
     ));
 
     projections.push({
-      month: projectedDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      month: formatDate(projectedDate),
       projectedContributions,
       projectedLoans,
       projectedInterest,

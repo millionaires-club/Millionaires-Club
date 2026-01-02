@@ -2,6 +2,7 @@ import React from 'react';
 import { Member, Loan } from '../types';
 import { financialService } from '../services/financialService';
 import { AlertTriangle, Clock, DollarSign, User } from 'lucide-react';
+import { formatDate } from '../constants';
 
 interface LatePaymentAlertsProps {
   members: Member[];
@@ -77,7 +78,7 @@ const LatePaymentAlerts: React.FC<LatePaymentAlertsProps> = ({ members, loans, o
                     {daysOverdue} days overdue
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400">
-                    Due: {new Date(loan.nextPaymentDue).toLocaleDateString()}
+                    Due: {formatDate(loan.nextPaymentDue)}
                   </div>
                 </div>
               </div>

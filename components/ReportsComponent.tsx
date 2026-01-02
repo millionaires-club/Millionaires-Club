@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Member, Loan, Transaction } from '../types';
 import { FileText, Download, Filter, Printer, Search, ChevronDown, Check, Calendar } from 'lucide-react';
+import { formatDate } from '../constants';
 
 interface ReportsProps {
   members: Member[];
@@ -127,7 +128,7 @@ const ReportsComponent: React.FC<ReportsProps> = ({ members, loans, transactions
         </table>
 
         <div class="text-center text-xs text-slate-400 mt-12">
-            Generated on ${new Date().toLocaleDateString()} • internal use only
+            Generated on ${formatDate(new Date())} • internal use only
         </div>
       `);
 
@@ -158,7 +159,7 @@ const ReportsComponent: React.FC<ReportsProps> = ({ members, loans, transactions
             <div class="text-right">
                 <div class="font-bold text-xl">${member.name}</div>
                 <div class="text-sm text-slate-600">ID: ${member.id}</div>
-                <div class="text-sm text-slate-600">Date: ${new Date().toLocaleDateString()}</div>
+                <div class="text-sm text-slate-600">Date: ${formatDate(new Date())}</div>
             </div>
         </div>
 
@@ -171,7 +172,7 @@ const ReportsComponent: React.FC<ReportsProps> = ({ members, loans, transactions
                 </div>
                 <div class="flex justify-between">
                     <span class="text-sm text-slate-600">Join Date:</span>
-                    <span class="font-medium text-slate-800">${new Date(member.joinDate).toLocaleDateString()}</span>
+                    <span class="font-medium text-slate-800">${formatDate(member.joinDate)}</span>
                 </div>
             </div>
 
@@ -184,7 +185,7 @@ const ReportsComponent: React.FC<ReportsProps> = ({ members, loans, transactions
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-slate-600">Next Payment Due:</span>
-                        <span class="font-medium text-red-600">${new Date(activeLoan.nextPaymentDue).toLocaleDateString()}</span>
+                        <span class="font-medium text-red-600">${formatDate(activeLoan.nextPaymentDue)}</span>
                     </div>
                 ` : `
                     <div class="text-slate-400 italic text-sm py-2">No active loans. Eligible for credit.</div>
@@ -207,7 +208,7 @@ const ReportsComponent: React.FC<ReportsProps> = ({ members, loans, transactions
                     const isCredit = t.type === 'CONTRIBUTION' || t.type === 'LOAN_REPAYMENT';
                     return `
                     <tr class="${i % 2 === 0 ? 'bg-white' : 'bg-slate-50'} border-b border-slate-100">
-                        <td class="p-3 text-slate-600">${new Date(t.date).toLocaleDateString()}</td>
+                        <td class="p-3 text-slate-600">${formatDate(t.date)}</td>
                         <td class="p-3 font-bold text-xs uppercase text-slate-500">${t.type.replace('_', ' ')}</td>
                         <td class="p-3 text-slate-700">${t.description || '-'}</td>
                         <td class="p-3 text-right font-bold ${isCredit ? 'text-emerald-600' : 'text-slate-700'}">

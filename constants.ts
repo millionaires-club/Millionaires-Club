@@ -1,35 +1,41 @@
 
 import { Member, YearlyContribution } from './types';
 
-// Date/Time Formatting Utilities
-export const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    year: 'numeric' 
-  });
+// Date/Time Formatting Utilities (US Central)
+const toDate = (value: string | number | Date) => value instanceof Date ? value : new Date(value);
+const CT_TIMEZONE = 'America/Chicago';
+
+export const formatDate = (value: string | number | Date) => {
+  const date = toDate(value);
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: CT_TIMEZONE,
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric'
+  }).format(date);
 };
 
-export const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
+export const formatDateTime = (value: string | number | Date) => {
+  const date = toDate(value);
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: CT_TIMEZONE,
+    month: '2-digit',
+    day: '2-digit',
     year: 'numeric',
-    hour: 'numeric', 
+    hour: 'numeric',
     minute: '2-digit',
-    hour12: true 
-  });
+    hour12: true
+  }).format(date);
 };
 
-export const formatTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
+export const formatTime = (value: string | number | Date) => {
+  const date = toDate(value);
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: CT_TIMEZONE,
+    hour: 'numeric',
     minute: '2-digit',
-    hour12: true 
-  });
+    hour12: true
+  }).format(date);
 };
 
 // Helper to generate IDs MC-10001 to MC-10210
